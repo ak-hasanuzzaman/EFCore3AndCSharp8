@@ -8,10 +8,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EFCore3AndCSharp8
 {
+    class MyClass
+    {
+        public delegate void CallBack(int i);
+        public void LongRunnigMethod(CallBack obj)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                obj(i);
+            }
+        }
+
+    }
     class Program
     {
         #region Asynchrounous Streams  
-        static async IAsyncEnumerable<int> FetchIOTData()
+
+        private static async IAsyncEnumerable<int> FetchIotData()
         {
             for (int i = 1; i <= 10; i++)
             {
@@ -51,20 +64,49 @@ namespace EFCore3AndCSharp8
         }
         #endregion
 
+        #region Delegate CallBack
+        static public void CallBack(int i)
+        {
+            Console.WriteLine(i.ToString());
+        }
+        #endregion
+
+        delegate double CalAreaPointer(int i);
+
         static async Task Main(string[] args)
         {
+            #region DELEGATE IN C#
 
-            #region Asynchrounous Streams  
-
-            //        #region DefaultIfEmptyEx1
-            //        DefaultIfEmptyEx1();
-            //       
+            //var myClass = new MyClass();
+            //myClass.LongRunnigMethod(CallBack);
 
 
-            //        await foreach (var dataPoint in FetchIOTData())
-            //        {
-            //            Console.WriteLine(dataPoint);
-            //        }
+            CalAreaPointer calAreaPointer = new CalAreaPointer(
+                delegate (int i) { return i * i; });
+
+            Console.WriteLine(calAreaPointer(5));
+
+            CalAreaPointer calAreaPointer1 = i => i * i;
+            Console.WriteLine(calAreaPointer1(10));
+
+
+            #endregion
+
+            #region DefaultIfEmptyEx1
+
+            //DefaultIfEmptyEx1();
+
+            #endregion
+
+            #region   Asynchrounous Streams
+
+            //await foreach (var dataPoint in FetchIOTData())
+            //{
+            //    Console.WriteLine(dataPoint);
+
+            #endregion
+
+            #region   nullable reference type
 
             //#nullable enable
 
@@ -82,17 +124,18 @@ namespace EFCore3AndCSharp8
             //        }
             //#nullable restore
 
+            #endregion
 
-            //Static local function
+            #region Static local function
+
             //Console.WriteLine(LocalFunc("Hasan", "Zaman"));
-
             //static string LocalFunc(string fName, string lName) => $"{fName},{lName}";
 
+            #endregion
 
-
+            #region Switch
 
             //var s = Console.ReadLine();
-
             ////Switch
             //var ss = s switch
             //{
@@ -103,83 +146,7 @@ namespace EFCore3AndCSharp8
             //};
 
             #endregion
-            try
-            {
-                var stopWatch = new Stopwatch();
-
-                stopWatch.Start();
-
-                //1. N+1 problem demonstration.
-
-                using (var db = new CatsDbContext())
-                {
-                    var owners = db.Owners
-                        .Where(o => o.Name.Contains("hasan"))
-                        .ToList();
-                    foreach (var owner in owners)
-                    {
-                        db.Entry(owner)
-                            .Collection(o => o.Cats)
-                            .Load();
-
-                        var cats = db.Cats
-                            .Where(c => c.Name.Contains("Hamlet") && c.OwnerId == owner.OwnerId)
-                            .ToList();
-                    }
-                }
-
-                var time = stopWatch.ElapsedMilliseconds;
-                Console.WriteLine("Elapsed time : " + time);
-
-
-                //2. Resolution of N+1 via .Include(). Which is not the most efficient but better
-
-                stopWatch = Stopwatch.StartNew();
-
-                using (var db = new CatsDbContext())
-                {
-                    var owners = db.Owners
-                        .Where(o => o.Name.Contains("hasan"))
-                        .Include(o => o.Cats)
-                        .ToList();
-
-                    foreach (var owner in owners)
-                    {
-                        var cats = db.Cats
-                            .Where(c => c.Name.Contains("Hamlet"))
-                            .ToList();
-                    }
-                }
-
-                var time1 = stopWatch.ElapsedMilliseconds;
-                Console.WriteLine("Elapsed time : " + time1);
-
-                //3. Resolution of N+1 via .Select()/projection, Which is the better approach.
-
-                stopWatch = Stopwatch.StartNew();
-
-                using (var db = new CatsDbContext())
-                {
-                    var owners = db.Owners
-                        .Where(o => o.Name.Contains("hasan"))
-                        .Select(o => new
-                        {
-                            Cats = o.Cats.Where(c => c.Name.Contains("Hamlet"))
-                                .ToList()
-                        }).ToList();
-
-                }
-
-                var time2 = stopWatch.ElapsedMilliseconds;
-                Console.WriteLine("Elapsed time : " + time2);
-
-                Console.ReadLine();
-            }
-            catch (Exception e)
-            {
-            }
         }
 
     }
-
 }
