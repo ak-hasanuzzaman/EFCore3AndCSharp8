@@ -16,12 +16,15 @@ namespace EFCore3AndCSharp8.Data
                     .AddConsole();
             });
 
+        public DbSet<UnitToProfile> UnitToProfiles { get; set; }
+        public DbSet<Unit> Units { get; set; }
+
         public DbSet<Cat> Cats { get; set; }
         public DbSet<Owner> Owners { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseLoggerFactory(MyLoggerFactory)  //tie-up DbContext with LoggerFactory object
-                .EnableSensitiveDataLogging().UseSqlServer(@"Server=.\SQLEXPRESS;Database=CatsDemoDb;integrated Security=SSPI");
+                .EnableSensitiveDataLogging().UseSqlServer(@"Server=137.117.213.98;Database=D4G_CK;User Id=windms;Password=schiller;");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -33,6 +36,13 @@ namespace EFCore3AndCSharp8.Data
                 .HasOne(c => c.Owner)
                 .WithMany(o => o.Cats)
                 .HasForeignKey(c => c.OwnerId);
+
+            modelBuilder.Entity<UnitToProfile>()
+                .HasKey(t => new { t.ProfileID, t.UnitID });
+            modelBuilder.Entity<UnitToUnitCombination>()
+                .HasKey(t => new { t.UnitID, t.UnitCombinationID });
+
+
         }
     }
     public static class ModelBuilderExtensions
