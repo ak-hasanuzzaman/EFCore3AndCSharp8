@@ -13,19 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EFCore3AndCSharp8
 {
-    class MyClass
-    {
-        public delegate void CallBack(int i);
-        public void LongRunnigMethod(CallBack obj)
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                obj(i);
-            }
-        }
-
-    }
-
+   
 
     class Program
     {
@@ -93,19 +81,11 @@ namespace EFCore3AndCSharp8
         //    Console.WriteLine(first);
         //}
 
-        //#endregion
 
-        //#region Delegate CallBack
-
-        //static public void CallBack(int i)
-        //{
-        //    Console.WriteLine(i.ToString());
-        //}
 
         //#endregion
 
-        //delegate double CalAreaPointer(int i);
-
+    
         //delegate string Who(Person p); 
         #endregion
 
@@ -132,24 +112,6 @@ namespace EFCore3AndCSharp8
 
             //#region IEnumerable from .SELECT()
             ////var result = testList.Select(t => { return t; });
-            //#endregion
-
-
-            //#region DELEGATE IN C#
-
-            ////var myClass = new MyClass();
-            ////myClass.LongRunnigMethod(CallBack);
-
-
-            //CalAreaPointer calAreaPointer = new CalAreaPointer(
-            //    delegate (int i) { return i * i; });
-
-            //Console.WriteLine(calAreaPointer(5));
-
-            //CalAreaPointer calAreaPointer1 = i => i * i;
-            //Console.WriteLine(calAreaPointer1(10));
-
-
             //#endregion
 
             //#region DefaultIfEmptyEx1
