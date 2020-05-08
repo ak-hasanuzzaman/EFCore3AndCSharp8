@@ -181,29 +181,25 @@ namespace EFCore3AndCSharp8
             //         where up.ProfileID == 5
             //         select new { unit = all.Unit, UnitToUnitCombination = all.UnitToUnitCombination };
 
-            var r11 =from u in _context.Units
-                        join up in _context.UnitToProfiles
-                        on u.ID equals up.UnitID
-                      group up by up.ProfileID into g
-                     let Count= g.Count()
-                     orderby g.Count() descending
-                       select new { ProfileID = g.Key, Count = g.Count() }
-                      ;
+            //var r11 = from u in _context.Units
+            //          join up in _context.UnitToProfiles
+            //          on u.ID equals up.UnitID
+            //          group up by up.ProfileID into g
+            //          let Count = g.Count()
+            //          orderby g.Count() descending
+            //          select new { ProfileID = g.Key, Count = g.Count() }
+            //          ;
 
-            foreach (var item in r11)
-            {
-                Console.WriteLine(item.ProfileID + " Count : " + item.Count);
-            }
-
-
+            //foreach (var item in r11)
+            //{
+            //    Console.WriteLine(item.ProfileID + " Count : " + item.Count);
+            //}
 
 
-
-
-            var r = await _context.Units
-                .Where(u => u.UnitToProfile.Where(up => up.ProfileID == 5).Count() > 0)
-                .Select(u => u)
-                .ToListAsync();
+            //var r = await _context.Units
+            //    .Where(u => u.UnitToProfile.Where(up => up.ProfileID == 5).Count() > 0)
+            //    .Select(u => u)
+            //    .ToListAsync();
 
             var unitToProfiles = await _context.UnitToProfiles
                 .Join(_context.Units,
@@ -231,6 +227,7 @@ namespace EFCore3AndCSharp8
                 .Where(e => e.UnitToProfile.ProfileID == 1
                             && e.Unit.RecordStatus == 1
                             && e.Unit.UnitTypeRef.HasEngine)
+                .OrderByDescending(u => u.UnitToProfile.ProfileID)
                 .Select(up => new UnitToProfile
                 {
                     ProfileID = up.UnitToProfile.ProfileID,
