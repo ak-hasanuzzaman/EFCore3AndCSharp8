@@ -4,16 +4,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Order;
-using BenchmarkDotNet.Running;
 using EFCore3AndCSharp8.Data;
 using EFCore3AndCSharp8.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace EFCore3AndCSharp8
 {
-   
+
 
     class Program
     {
@@ -85,15 +82,14 @@ namespace EFCore3AndCSharp8
 
         //#endregion
 
-    
+
         //delegate string Who(Person p); 
         #endregion
 
         static async Task Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<EFPerformanceTest>();
-
-
+            //var summary = BenchmarkRunner.Run<EFPerformanceTest>();
+            var ss = await NewMethod();
             #region MyRegion
 
             //Who who = delegate (Person p)
@@ -172,12 +168,90 @@ namespace EFCore3AndCSharp8
             #endregion
         }
 
+        public static async Task<List<UnitToProfile>> NewMethod()
+        {
+            CatsDbContext _context = new CatsDbContext();
+            //var r1 = from u in _context.Units
+            //         join up in _context.UnitToProfiles
+            //             on u.ID equals up.UnitID
+            //         let Combined = new { u, up }
+            //         join uuc in _context.UnitToUnitCombinations
+            //                                 on Combined.u.ID equals uuc.UnitID
+            //         let all = new { UnitToUnitCombination = uuc, Unit = Combined.u }
+            //         where up.ProfileID == 5
+            //         select new { unit = all.Unit, UnitToUnitCombination = all.UnitToUnitCombination };
 
+            var r11 =from u in _context.Units
+                        join up in _context.UnitToProfiles
+                        on u.ID equals up.UnitID
+                      group up by up.ProfileID into g
+                     let Count= g.Count()
+                     orderby g.Count() descending
+                       select new { ProfileID = g.Key, Count = g.Count() }
+                      ;
+
+            foreach (var item in r11)
+            {
+                Console.WriteLine(item.ProfileID + " Count : " + item.Count);
+            }
+
+
+
+
+
+
+            var r = await _context.Units
+                .Where(u => u.UnitToProfile.Where(up => up.ProfileID == 5).Count() > 0)
+                .Select(u => u)
+                .ToListAsync();
+
+            var unitToProfiles = await _context.UnitToProfiles
+                .Join(_context.Units,
+                    up => up.UnitID,
+                    u => u.ID,
+                    (up, u) => new
+                    {
+                        UnitToProfile = new UnitToProfile
+                        {
+                            ProfileID = up.ProfileID,
+                            UnitID = up.UnitID,
+                        },
+                        Unit = new Unit()
+                        {
+                            RecordStatus = up.Unit.RecordStatus,
+                            UnitTypeRef = up.Unit.UnitTypeRef,
+                            UnitToUnitCombinations = up.Unit.UnitToUnitCombinations
+                                .Select(uc => new UnitToUnitCombination()
+                                {
+                                    UnitCombinationID = uc.UnitCombinationID,
+                                    UnitID = uc.UnitID
+                                })
+                        }
+                    })
+                .Where(e => e.UnitToProfile.ProfileID == 1
+                            && e.Unit.RecordStatus == 1
+                            && e.Unit.UnitTypeRef.HasEngine)
+                .Select(up => new UnitToProfile
+                {
+                    ProfileID = up.UnitToProfile.ProfileID,
+                    UnitID = up.UnitToProfile.UnitID,
+                    Unit = up.Unit
+                })
+                .ToListAsync();
+
+            var unitToProfiles1 = await _context.UnitToProfiles
+                .Include(e => e.Unit).ThenInclude(e => e.UnitTypeRef)
+                .Include(e => e.Unit).ThenInclude(e => e.UnitToUnitCombinations).ThenInclude(e => e.UnitCombination)
+                .Where(e => e.ProfileID == 1
+                            && e.Unit.RecordStatus == 1
+                            && e.Unit.UnitTypeRef.HasEngine)
+                .ToListAsync();
+
+
+            return unitToProfiles;
+        }
     }
 
-    [MemoryDiagnoser]
-    [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-    [RankColumn()]
     public class EFPerformanceTest
     {
         //var s = new Stopwatch();
@@ -235,45 +309,51 @@ namespace EFCore3AndCSharp8
         //    //s1.Stop();
         //    //var ts1 = s1.ElapsedMilliseconds;
 
-        [Benchmark]
         public async Task<List<UnitToProfile>> NewMethod()
         {
             CatsDbContext _context = new CatsDbContext();
-            //var unitToProfiles = await _context.UnitToProfiles
-            //    .Join(_context.Units,
-            //        up => up.UnitID,
-            //        u => u.ID,
-            //        (up, u) => new
-            //        {
-            //            UnitToProfile = new UnitToProfile
-            //            {
-            //                ProfileID = up.ProfileID,
-            //                UnitID = up.UnitID,
-            //            },
-            //            Unit = new Unit()
-            //            {
-            //                RecordStatus = up.Unit.RecordStatus,
-            //                UnitTypeRef = up.Unit.UnitTypeRef,
-            //                UnitToUnitCombinations = up.Unit.UnitToUnitCombinations
-            //                    .Select(uc => new UnitToUnitCombination()
-            //                    {
-            //                        UnitCombinationID = uc.UnitCombinationID,
-            //                        UnitID = uc.UnitID
-            //                    })
-            //            }
-            //        })
-            //    .Where(e => e.UnitToProfile.ProfileID == 1
-            //                && e.Unit.RecordStatus == 1
-            //                && e.Unit.UnitTypeRef.HasEngine)
-            //    .Select(up => new UnitToProfile
-            //    {
-            //        ProfileID = up.UnitToProfile.ProfileID,
-            //        UnitID = up.UnitToProfile.UnitID,
-            //        Unit = up.Unit
-            //    })
-            //    .ToListAsync();
+
+
+
+
+
+
 
             var unitToProfiles = await _context.UnitToProfiles
+                .Join(_context.Units,
+                    up => up.UnitID,
+                    u => u.ID,
+                    (up, u) => new
+                    {
+                        UnitToProfile = new UnitToProfile
+                        {
+                            ProfileID = up.ProfileID,
+                            UnitID = up.UnitID,
+                        },
+                        Unit = new Unit()
+                        {
+                            RecordStatus = up.Unit.RecordStatus,
+                            UnitTypeRef = up.Unit.UnitTypeRef,
+                            UnitToUnitCombinations = up.Unit.UnitToUnitCombinations
+                                .Select(uc => new UnitToUnitCombination()
+                                {
+                                    UnitCombinationID = uc.UnitCombinationID,
+                                    UnitID = uc.UnitID
+                                })
+                        }
+                    })
+                .Where(e => e.UnitToProfile.ProfileID == 1
+                            && e.Unit.RecordStatus == 1
+                            && e.Unit.UnitTypeRef.HasEngine)
+                .Select(up => new UnitToProfile
+                {
+                    ProfileID = up.UnitToProfile.ProfileID,
+                    UnitID = up.UnitToProfile.UnitID,
+                    Unit = up.Unit
+                })
+                .ToListAsync();
+
+            var unitToProfiles1 = await _context.UnitToProfiles
                 .Include(e => e.Unit).ThenInclude(e => e.UnitTypeRef)
                 .Include(e => e.Unit).ThenInclude(e => e.UnitToUnitCombinations).ThenInclude(e => e.UnitCombination)
                 .Where(e => e.ProfileID == 1

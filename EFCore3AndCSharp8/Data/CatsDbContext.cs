@@ -17,6 +17,7 @@ namespace EFCore3AndCSharp8.Data
             });
 
         public DbSet<UnitToProfile> UnitToProfiles { get; set; }
+        public DbSet<UnitToUnitCombination> UnitToUnitCombinations { get; set; }
         public DbSet<Unit> Units { get; set; }
 
         public DbSet<Cat> Cats { get; set; }
