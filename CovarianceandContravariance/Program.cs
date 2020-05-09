@@ -33,6 +33,10 @@ namespace CovarianceandContravariance
             del();
 
             TakeBirdDelegate del1 = Eat;
+            del1(new Bird());
+
+            //TakeAnimalDelegate del2 = Fly; // Does not work
+            //del1(new Bird());
 
 
             Console.ReadLine();
